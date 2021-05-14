@@ -20,14 +20,6 @@ class CDaemon(object):
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
-        args = self.get_args()
-        self.process = args.process
-        self.action = args.action
-        self.path = args.path
-        # Debug mode setup
-        self.verbose = args.verbose
-        # File mask, default 0
-        self.umask = args.umask
         self.daemon_alive = True
 
     def __enter__(self):
@@ -36,6 +28,14 @@ class CDaemon(object):
 
         :return: self, type: object
         """
+        args = self.get_args()
+        self.process = args.process
+        self.action = args.action
+        self.path = args.path
+        # Debug mode setup
+        self.verbose = args.verbose
+        # File mask, default 0
+        self.umask = args.umask
         # Watching verbose change
         self.switch_verbose()
         # Register exit callback function
@@ -79,22 +79,6 @@ class CDaemon(object):
         parser.add_argument('--umask', type=int, metavar='<File umask>', help='File umask. Default: [0]', default=0)
         args = parser.parse_args()
         return args
-
-    @property
-    def verbose(self):
-        return self.verbose
-
-    @verbose.setter
-    def verbose(self, verbose_mode):
-        self.verbose = verbose_mode
-
-    @property
-    def umask(self):
-        return self.umask
-
-    @umask.setter
-    def umask(self, mask):
-        self.umask = mask
 
     def switch_verbose(self):
         if self.verbose:
