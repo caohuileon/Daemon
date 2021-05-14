@@ -21,13 +21,7 @@ class CDaemon(object):
         self.stdout = stdout
         self.stderr = stderr
         self.daemon_alive = True
-
-    def __enter__(self):
-        """
-        Enter function will implement after __init__
-
-        :return: self, type: object
-        """
+        # Args setup
         args = self.get_args()
         self.process = args.process
         self.action = args.action
@@ -36,33 +30,6 @@ class CDaemon(object):
         self.verbose = args.verbose
         # File mask, default 0
         self.umask = args.umask
-        # Watching verbose change
-        self.switch_verbose()
-        # Register exit callback function
-        atexit.register(self.del_pid)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """
-        Exit function will process error messages
-
-        :param exc_type: error trace type
-        :param exc_val: error trace value
-        :param exc_tb: error trace traceback
-        :return: True, it will continue to the next component, type: bool
-        """
-        logger.info("Processing error message...")
-        # Print job errors after "with xx as xx:" part
-        if any([exc_type, exc_val, exc_tb]):
-            if "SystemExit" not in str(exc_type) and exc_val != 0:
-                traceback.print_exception(exc_type, exc_val, exc_tb)
-                logger.info(traceback.extract_tb(exc_tb))
-            else:
-                logger.info("None")
-        else:
-            logger.info("None")
-        # Based on your requirements to set True or remove return
-        return True
 
     @staticmethod
     def get_args():
@@ -145,6 +112,8 @@ class CDaemon(object):
 
         # Step 6: Monitoring exit behavior
         logger.info("Step 6: Monitoring exit behavior...")
+        # Register exit callback function
+        atexit.register(self.del_pid)
         pid = str(os.getpid())
         with open(self.pid_file, 'w+') as fw:
             fw.write('%s\n' % pid)
@@ -181,8 +150,9 @@ class CDaemon(object):
             msg = 'pid file %s already exists, is daemon process already running?\n'
             sys.stderr.write(msg % self.pid_file)
             sys.exit(1)
-        # start the daemon
+        # Prepare daemon context
         self.daemonize()
+        # Start daemon process
         self.run(*args, **kwargs)
 
     def stop(self):
@@ -254,17 +224,19 @@ def show_end_info():
 
 
 def main():
-    with CDaemon() as daemon:
-        show_title_info(daemon.action, daemon.process)
-        if daemon.action == "start":
-            daemon.start()
-        elif daemon.action == "stop":
-            daemon.stop()
-        elif daemon.action == "restart":
-            daemon.restart()
-        elif daemon.action == "status":
-            daemon.status()
-        show_end_info()
+    daemon = CDaemon()
+    show_title_info(daemon.action, daemon.process)
+    # Watching verbose change
+    daemon.switch_verbose()
+    if daemon.action == "start":
+        daemon.start()
+    elif daemon.action == "stop":
+        daemon.stop()
+    elif daemon.action == "restart":
+        daemon.restart()
+    elif daemon.action == "status":
+        daemon.status()
+    show_end_info()
 
 
 if __name__ == '__main__':
