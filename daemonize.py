@@ -54,8 +54,11 @@ class CDaemon(object):
         logger.info("Processing error message...")
         # Print job errors after "with xx as xx:" part
         if any([exc_type, exc_val, exc_tb]):
-            traceback.print_exception(exc_type, exc_val, exc_tb)
-            logger.info(traceback.extract_tb(exc_tb))
+            if "SystemExit" not in str(exc_type) and exc_val != 0:
+                traceback.print_exception(exc_type, exc_val, exc_tb)
+                logger.info(traceback.extract_tb(exc_tb))
+            else:
+                logger.info("None")
         else:
             logger.info("None")
         # Based on your requirements to set True or remove return
@@ -113,9 +116,9 @@ class CDaemon(object):
             os.dup2(s_in.fileno(), sys.stdin.fileno())
         with open(self.stdout, 'a+') as s_out:
             os.dup2(s_out.fileno(), sys.stdout.fileno())
-        if self.stderr:
-            with open(self.stderr, 'a+', 0) as s_err:
-                os.dup2(s_err.fileno(), sys.stderr.fileno())
+        # if self.stderr:
+        #     with open(self.stderr, 'a+') as s_err:
+        #         os.dup2(s_err.fileno(), sys.stderr.fileno())
 
     # This is main function to daemonize a process
     def daemonize(self):
@@ -181,7 +184,6 @@ class CDaemon(object):
         # start the daemon
         self.daemonize()
         self.run(*args, **kwargs)
-        logger.info("Daemon process started successfully!")
 
     def stop(self):
         logger.info("Stopping daemon process...")
@@ -229,20 +231,31 @@ class CDaemon(object):
             logger.info(message)
             sys.stderr.write(message)
         else:
-            error_msg = "The process is running, PID is %s .\n"
-            logger.error(error_msg)
-            sys.stderr.write(error_msg % str(pid))
+            message = "The process is running, PID is %s .\n"
+            logger.info(message % str(pid))
+            sys.stderr.write(message % str(pid))
 
     def run(self, *args, **kwargs):
-        logger.info("Running process...")
+        logger.info("Daemon process start running...")
         while True:
-            sys.stdout.write('%s:hello world\n' % (time.ctime(),))
+            sys.stdout.write('%s: hello world\n' % (time.ctime(),))
             sys.stdout.flush()
             time.sleep(2)
 
 
+def show_title_info(action, process):
+    logger.info("=========================================== Daemon Begin ============================================")
+    logger.info("Daemon Action: %s, Process: %s" % (action, process))
+    logger.info("=====================================================================================================")
+
+
+def show_end_info():
+    logger.info("============================================= Daemon End ============================================")
+
+
 def main():
     with CDaemon() as daemon:
+        show_title_info(daemon.action, daemon.process)
         if daemon.action == "start":
             daemon.start()
         elif daemon.action == "stop":
@@ -251,6 +264,7 @@ def main():
             daemon.restart()
         elif daemon.action == "status":
             daemon.status()
+        show_end_info()
 
 
 if __name__ == '__main__':
