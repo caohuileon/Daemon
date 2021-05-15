@@ -7,10 +7,9 @@ import os
 import signal
 import sys
 import time
-import traceback
 
 from daemon.comm.logger import logger
-from daemon.comm.global_setup import PID_FILE
+from daemon.comm.global_setup import PID_FILE, TIME_INTERVAL
 
 
 class CDaemon(object):
@@ -76,6 +75,8 @@ class CDaemon(object):
 
     def redirect_std_info(self):
         logger.info("Redirecting std info and file description objects...")
+        logger.warning("After redirect all log will not show in console, you may need check daemon status by command "
+                       "or in log file!")
         sys.stdout.flush()
         sys.stderr.flush()
 
@@ -83,9 +84,9 @@ class CDaemon(object):
             os.dup2(s_in.fileno(), sys.stdin.fileno())
         with open(self.stdout, 'a+') as s_out:
             os.dup2(s_out.fileno(), sys.stdout.fileno())
-        # if self.stderr:
-        #     with open(self.stderr, 'a+') as s_err:
-        #         os.dup2(s_err.fileno(), sys.stderr.fileno())
+        if self.stderr:
+            with open(self.stderr, 'a+') as s_err:
+                os.dup2(s_err.fileno(), sys.stderr.fileno())
 
     # This is main function to daemonize a process
     def daemonize(self):
@@ -119,12 +120,13 @@ class CDaemon(object):
             fw.write('%s\n' % pid)
 
         # Watching signal interrupt
-        def signal_handler():
-            self.daemon_alive = False
-            sys.exit(0)
+        signal.signal(signal.SIGTERM, self.signal_handler)
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGHUP, self.signal_handler)
 
-        signal.signal(signal.SIGTERM, signal_handler)
-        signal.signal(signal.SIGINT, signal_handler)
+    def signal_handler(self):
+        self.daemon_alive = False
+        sys.exit(0)
 
     def get_pid(self):
         try:
@@ -148,6 +150,7 @@ class CDaemon(object):
         pid = self.get_pid()
         if pid:
             msg = 'pid file %s already exists, is daemon process already running?\n'
+            logger.info(msg % self.pid_file)
             sys.stderr.write(msg % self.pid_file)
             sys.exit(1)
         # Prepare daemon context
@@ -157,14 +160,22 @@ class CDaemon(object):
 
     def stop(self):
         logger.info("Stopping daemon process...")
-        pid = self.get_pid()
+        # Get pid
+        try:
+            pid = self.get_pid()
+        except IOError:
+            pid = None
+
+        # If process not run return
         if not pid:
-            msg = 'pid file [%s] does not exist. is daemon process NOT running?\n' % self.pid_file
-            sys.stderr.write(msg)
+            msg = 'pid file [%s] not exists, daemon process NOT running!\n'
+            logger.info(msg % self.pid_file)
+            sys.stderr.write(msg % self.pid_file)
             if os.path.exists(self.pid_file):
                 os.remove(self.pid_file)
             return
-        # try to kill the daemon process
+
+        # Try to kill daemon process
         try:
             i = 0
             while True:
@@ -181,8 +192,7 @@ class CDaemon(object):
             else:
                 logger.error("Catch error info: %s while stopping!" % str(err))
                 sys.exit(1)
-            if self.verbose >= 1:
-                logger.info("Daemon stopped successfully!")
+        logger.info("Daemon process stopped successfully!")
 
     def restart(self, *args, **kwargs):
         logger.info("Restarting daemon...")
@@ -208,9 +218,9 @@ class CDaemon(object):
     def run(self, *args, **kwargs):
         logger.info("Daemon process start running...")
         while True:
-            sys.stdout.write('%s: hello world\n' % (time.ctime(),))
-            sys.stdout.flush()
-            time.sleep(2)
+            logger.info(self.process)
+            logger.warning("Process will rerun after %s seconds." % TIME_INTERVAL)
+            time.sleep(TIME_INTERVAL)
 
 
 def show_title_info(action, process):
