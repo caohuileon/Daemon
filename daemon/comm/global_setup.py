@@ -11,8 +11,6 @@ LOG_FORMAT = "%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(mes
 
 # Daemon setup
 PID_FILE = "/daemon.pid"
-# Daemon process running periodically, time interval setup (seconds).
-TIME_INTERVAL = 2
 
 
 def show_progress(index, buff_size):
