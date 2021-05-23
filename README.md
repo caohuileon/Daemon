@@ -1,5 +1,5 @@
 # Description
-This repo used for Daemon module and this module can be easily copy to your code to daemonize your project.
+This repo used for Daemon module and this module can be easily copy to your code to daemonize your project.\
 Python Version: 3.8.x
 
 ## Daemonize Steps
