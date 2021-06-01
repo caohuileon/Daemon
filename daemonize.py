@@ -198,8 +198,7 @@ class CDaemon(object):
         with open(self.pid_file, 'w+') as fw:
             fw.write('%s\n' % pid)
 
-        # Watching signal interrupt. Beware it will only response in this function, add signal callback here to
-        # better process system exit during prepare daemonize phase.
+        # Watching signal interrupt. Add signal callback here to better process system exit behavior.
         signal.signal(signal.SIGTERM, self.signal_handler)
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGHUP, self.signal_handler)
