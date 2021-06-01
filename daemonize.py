@@ -178,7 +178,7 @@ class CDaemon(object):
         os.setsid()    # After setsid, sub-process pid will > 0 and will be host of pgid
 
         # Step 3: Switch current working directory and reset file umask privilege
-        logger.info("Step3: Switch current working directory and reset file umask privilege...")
+        logger.info("Step 3: Switch current working directory and reset file umask privilege...")
         os.chdir(self.path)
         os.umask(self.umask)
 
@@ -366,7 +366,7 @@ def show_title_info(action, process, interval):
     :return: None
     """
     logger.info("=========================================== Daemon Begin ============================================")
-    logger.info("Daemon Action: %s, Process: %s, Interval: %ss" % (action, process, interval))
+    logger.info("Daemon Action: %s, Process: '%s', Interval: %ss" % (action, process, interval))
     logger.info("=====================================================================================================")
 
 
