@@ -351,7 +351,7 @@ class CDaemon(object):
         """
         logger.info("Daemon process start running...")
         while True:
-            logger.info(self.process)
+            os.system(self.process)
             logger.warning("Process will rerun after %s seconds." % self.interval)
             time.sleep(self.interval)
 
