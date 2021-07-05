@@ -37,3 +37,10 @@ Python Version: 3.8.x
                   Since we use logger module, so this parameter can be ignored.
     :arg:patch: Default working path, beware the pid file path is locked in "/daemon.pid". default: ["/"], type: str
     :arg:umask: File mask access privilege, recommend set to 0. default: [0], type: int
+
+# Demo
+    python3 daemonize.py "python3 /repo/mech_engine/mech_engine/mech_main.py mechanic -p test" start --interval=10
+    python3 daemonize.py "python3 /repo/mech_engine/mech_engine/mech_main.py mechanic -p test" stop
+    python3 daemonize.py "python3 /repo/mech_engine/mech_engine/mech_main.py mechanic -p test" restart --interval=10
+    python3 daemonize.py "python3 /repo/mech_engine/mech_engine/mech_main.py mechanic -p test" status
+    
